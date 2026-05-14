@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sanal Kabin Lite</title>
+    <title>Sanal Kabin Lite - AR</title>
+    
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-face-aframe.prod.js"></script>
+    
     <style>
         body {
             margin: 0;
@@ -20,12 +24,7 @@
             justify-content: center;
             align-items: center;
             background-color: #000;
-        }
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transform: scaleX(-1); /* Ayna efekti için videoyu ters çevirir */
+            position: relative; /* A-Frame'in düzgün yerleşmesi için */
         }
         #menu-alani {
             flex: 1;
@@ -55,7 +54,17 @@
 <body>
 
     <div id="kamera-alani">
-        <video id="webcam" autoplay playsinline></video>
+        <a-scene mindar-face embedded color-space="sRGB" 
+                 vr-mode-ui="enabled: false" 
+                 device-orientation-permission-ui="enabled: false"
+                 style="width: 100%; height: 100%;">
+            <a-camera active="false" position="0 0 0"></a-camera>
+            <a-entity mindar-face-target="anchorIndex: 1">
+                <a-gltf-model id="ar-model" src="" 
+                              position="0 0 0" rotation="0 0 0" scale="1 1 1">
+                </a-gltf-model>
+            </a-entity>
+        </a-scene>
     </div>
 
     <div id="menu-alani">
@@ -66,26 +75,39 @@
     </div>
 
     <script>
-        // Kamerayı Başlatma Fonksiyonu
-        async function kamerayiBaslat() {
-            const video = document.getElementById('webcam');
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                video.srcObject = stream;
-            } catch (hata) {
-                console.error("Kameraya erişilemedi: ", hata);
-                alert("Lütfen kamera izni verin!");
+        // Mind-AR kendi kamerasını yönettiği için ayrı bir getUserMedia çağrısına gerek yok.
+
+        function temaSec(tema) {
+            const model = document.getElementById('ar-model');
+            const modeller = {
+                kovboy: {
+                    src: './modeller/kovboy_sapkasi.glb',
+                    position: '0 0.05 0',
+                    rotation: '0 -10 0',
+                    scale: '1.2 1.2 1.2'
+                },
+                uzayli: {
+                    src: './modeller/uzayli_gozluk.glb',
+                    position: '0 -0.02 -0.02',
+                    rotation: '0 0 0',
+                    scale: '0.9 0.9 0.9'
+                },
+                kral: {
+                    src: './modeller/kral_taci.glb',
+                    position: '0 0.08 0',
+                    rotation: '0 0 0',
+                    scale: '1 1 1'
+                }
+            };
+
+            const ayar = modeller[tema];
+            if (ayar) {
+                model.setAttribute('src', ayar.src);
+                model.setAttribute('position', ayar.position);
+                model.setAttribute('rotation', ayar.rotation);
+                model.setAttribute('scale', ayar.scale);
             }
         }
-
-        // Butonlara tıklandığında çalışacak test fonksiyonu
-        function temaSec(tema) {
-            console.log("Seçilen tema: " + tema);
-            // İleride AR objelerini buraya bağlayacağız
-        }
-
-        // Sayfa yüklendiğinde kamerayı aç
-        window.onload = kamerayiBaslat;
     </script>
 
 </body>
