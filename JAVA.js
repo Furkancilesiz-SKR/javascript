@@ -1,46 +1,81 @@
-// Model değiştirme fonksiyonu
-function temaSec(tema) {
-    // Sahnemizdeki a-gltf-model elementini id'siyle seç
-    const model = document.getElementById('ar-model');
-    if (!model) {
-        console.error('AR model elementi bulunamadı!');
-        return;
+// Kullanıcı seçimlerini tutacağımız obje
+let kullaniciSecimleri = {
+    kiyafet: "",
+    arkaplan: ""
+};
+
+// 1. Kamerayı Başlat
+async function kamerayiBaslat() {
+    const video = document.getElementById('webcam');
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+    } catch (hata) {
+        console.error("Kamera açılamadı:", hata);
     }
-
-    // Her tema için model dosyası ve konum/ölçek/rotasyon ayarları
-    const modeller = {
-        kovboy: {
-            src: './modeller/kovboy_sapkasi.glb',   // GLB dosyanızın yolu
-            position: '0 0.05 0',                  // Buruna göre yukarıda
-            rotation: '0 -10 0',
-            scale: '1.2 1.2 1.2'
-        },
-        uzayli: {
-            src: './modeller/uzayli_gozluk.glb',
-            position: '0 -0.02 -0.02',
-            rotation: '0 0 0',
-            scale: '0.9 0.9 0.9'
-        },
-        kral: {
-            src: './modeller/kral_taci.glb',
-            position: '0 0.08 0',
-            rotation: '0 0 0',
-            scale: '1 1 1'
-        }
-    };
-
-    // Seçilen temanın ayarlarını al
-    const ayar = modeller[tema];
-    if (!ayar) {
-        console.warn('Bilinmeyen tema: ' + tema);
-        return;
-    }
-
-    // A-Frame elementine yeni özellikleri ata (modeli güncelle)
-    model.setAttribute('src', ayar.src);
-    model.setAttribute('position', ayar.position);
-    model.setAttribute('rotation', ayar.rotation);
-    model.setAttribute('scale', ayar.scale);
-
-    console.log(`"${tema}" teması başarıyla yüklendi.`);
 }
+
+// 2. Seçim Yapma Fonksiyonu (Kartlara tıklanınca çalışır)
+function secimYap(kategori, secim, element) {
+    kullaniciSecimleri[kategori] = secim;
+    
+    // Tıklanan kategorideki diğer kartların seçim rengini temizle
+    let grid = element.parentElement;
+    let kartlar = grid.getElementsByClassName('secenek-kart');
+    for(let i = 0; i < kartlar.length; i++) {
+        kartlar[i].classList.remove('secili');
+    }
+    
+    // Sadece tıklanan kartı seçili yap
+    element.classList.add('secili');
+}
+
+// 3. Adımlar Arası Geçiş
+function sonrakiAdim(mevcutAdimId, sonrakiAdimId) {
+    document.getElementById(mevcutAdimId).classList.add('gizli');
+    document.getElementById(sonrakiAdimId).classList.remove('gizli');
+}
+
+// 4. Yapay Zeka Üretim Simülasyonu (Animasyonlu Yükleme)
+function videoyuUret() {
+    // Seçim yapıldı mı kontrolü
+    if(!kullaniciSecimleri.kiyafet || !kullaniciSecimleri.arkaplan) {
+        alert("Lütfen önce kıyafet ve arka plan seçin!");
+        return;
+    }
+
+    // Arka plan seçiminden yükleme ekranına geç
+    sonrakiAdim('adim-arkaplan', 'adim-yukleniyor');
+
+    let metin = document.getElementById('yukleme-metni');
+    
+    // Kullanıcıya yapay zeka çalışıyormuş hissi vermek için metinleri sırayla değiştiriyoruz
+    setTimeout(() => { metin.innerText = kullaniciSecimleri.kiyafet + " stili ayarlanıyor..."; }, 1500);
+    setTimeout(() => { metin.innerText = kullaniciSecimleri.arkaplan + " arka planı ekleniyor..."; }, 3000);
+    setTimeout(() => { metin.innerText = "Video işleniyor... Neredeyse hazır!"; }, 4500);
+
+    // 6 Saniye sonra sonuç ekranını göster
+    setTimeout(() => {
+        sonrakiAdim('adim-yukleniyor', 'adim-sonuc');
+        document.getElementById('sonuc-video').play();
+    }, 6000);
+}
+
+// 5. Sistemi Sıfırla (Başa Dön)
+function basaDon() {
+    document.getElementById('sonuc-video').pause();
+    document.getElementById('sonuc-video').currentTime = 0;
+    
+    // Tüm seçimleri temizle
+    kullaniciSecimleri = { kiyafet: "", arkaplan: "" };
+    let kartlar = document.getElementsByClassName('secenek-kart');
+    for(let i = 0; i < kartlar.length; i++) { 
+        kartlar[i].classList.remove('secili'); 
+    }
+
+    // İlk ekrana dön
+    sonrakiAdim('adim-sonuc', 'adim-kiyafet');
+}
+
+// Sayfa yüklendiğinde kamerayı otomatik tetikle
+window.onload = kamerayiBaslat;
